@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "../interfaces/IProposal.sol";
+import "../interfaces/IAdvertisment.sol";
 import "../interfaces/IPayment.sol";
 import "../interfaces/IAccessControl.sol";
 
 contract MacMain {
-    IProposal public proposalContract;
+    IAdvertisment public advertismentContract;
     IPayment public paymentContract;
     IAccessControl public accessControlContract;
 
     constructor(
-        address _proposalContractAddress,
+        address _advertismentContractAddress,
         address _paymentContractAddress,
         address _accessControlContractAddress
     ) {
-        proposalContract = IProposal(_proposalContractAddress);
+        advertismentContract = IAdvertisment(_advertismentContractAddress);
         paymentContract = IPayment(_paymentContractAddress);
         accessControlContract = IAccessControl(_accessControlContractAddress);
     }
 
-    // PROPOSAL FUNCTIONS
-    function createProposal(
+    // ADVERTISMENT FUNCTIONS
+    function createAdvertisment(
         address creator,
         uint256 budget,
         string memory campaignDetails,
         address token,
-        uint256 milestoneThreshold
+        uint256 milestoneThreshold,
+        uint256 CPM
     ) public {
         require(
             accessControlContract.hasRole(
@@ -36,16 +37,17 @@ contract MacMain {
             "Caller is not an advertiser"
         );
 
-        proposalContract.createProposal(
+        advertismentContract.createAdvertisment(
             creator,
             budget,
             campaignDetails,
             token,
-            milestoneThreshold
+            milestoneThreshold,
+            CPM
         );
     }
 
-    function acceptProposal(uint256 proposalId) public {
+    function acceptAdvertisment(uint256 advertismentId) public {
         require(
             accessControlContract.hasRole(
                 accessControlContract.CREATOR_ROLE(),
@@ -53,10 +55,10 @@ contract MacMain {
             ),
             "Caller is not a creator"
         );
-        proposalContract.acceptProposal(proposalId);
+        advertismentContract.acceptAdvertisment(advertismentId);
     }
 
-    function rejectProposal(uint256 proposalId) public {
+    function rejectAdvertisment(uint256 advertismentId) public {
         require(
             accessControlContract.hasRole(
                 accessControlContract.CREATOR_ROLE(),
@@ -64,13 +66,13 @@ contract MacMain {
             ),
             "Caller is not a creator"
         );
-        proposalContract.rejectProposal(proposalId);
+        advertismentContract.rejectAdvertisment(advertismentId);
     }
 
-    function getProposal(
+    function getAdvertisment(
         uint256 id
-    ) public view returns (IProposal.Proposal memory) {
-        return proposalContract.getProposal(id);
+    ) public view returns (IAdvertisment.Advertisment memory) {
+        return advertismentContract.getAdvertisment(id);
     }
 
     function hasRole(bytes32 role, address account) public view returns (bool) {

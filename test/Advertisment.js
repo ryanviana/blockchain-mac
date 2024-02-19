@@ -7,43 +7,45 @@ const mileStoneThreshold = 1000;
 const budget = 1000000;
 const campaignDetails = "Test Campaign";
 
-describe("Proposal", function () {
+describe("Advertisment", function () {
   async function deployContract() {
     const [admin, advertiser, creator] = await ethers.getSigners();
-    const Proposal = await ethers.getContractFactory("ProposalContract");
-    const proposal = await Proposal.deploy();
-    return { proposal, admin, advertiser, creator };
+    const Advertisment = await ethers.getContractFactory(
+      "AdvertismentContract"
+    );
+    const advertisment = await Advertisment.deploy();
+    return { advertisment, admin, advertiser, creator };
   }
 
   it("Should create a Proposal and set admin", async function () {
-    const { proposal, admin, advertiser, creator } = await loadFixture(
+    const { advertisment, admin, advertiser, creator } = await loadFixture(
       deployContract
     );
-    expect(await proposal.owner()).to.equal(admin.address);
+    expect(await advertisment.owner()).to.equal(admin.address);
   });
 
-  it("should create a new proposal", async function () {
-    const { proposal, admin, advertiser, creator } = await loadFixture(
+  it("should create a new advertisment", async function () {
+    const { advertisment, admin, advertiser, creator } = await loadFixture(
       deployContract
     );
 
-    await proposal.createProposal(
+    await advertisment.createAdvertisment(
       creator.address,
       budget,
       campaignDetails,
       tokenAddress,
       mileStoneThreshold
     );
-    const proposalDetails = await proposal.getProposal(1);
-    expect(proposalDetails.creator).to.equal(creator.address);
+    const advertismentDetails = await advertisment.getAdvertisment(1);
+    expect(advertismentDetails.creator).to.equal(creator.address);
   });
 
-  it("should approve a proposal", async function () {
-    const { proposal, admin, advertiser, creator } = await loadFixture(
+  it("should approve a advertisment", async function () {
+    const { advertisment, admin, advertiser, creator } = await loadFixture(
       deployContract
     );
 
-    await proposal.createProposal(
+    await advertisment.createAdvertisment(
       creator.address,
       budget,
       campaignDetails,
@@ -51,19 +53,19 @@ describe("Proposal", function () {
       mileStoneThreshold
     );
 
-    const proposalConnectedToCreator = proposal.connect(creator);
-    await proposalConnectedToCreator.acceptProposal(1);
+    const advertismentConnectedToCreator = advertisment.connect(creator);
+    await advertismentConnectedToCreator.acceptAdvertisment(1);
 
-    const proposalDetails = await proposal.getProposal(1);
-    expect(proposalDetails.isAccepted).to.equal(true);
+    const adveretismentDetails = await advertisment.getAdveretisment(1);
+    expect(advertismentDetails.isAccepted).to.equal(true);
   });
 
-  it("should reject a proposal", async function () {
-    const { proposal, admin, advertiser, creator } = await loadFixture(
+  it("should reject a advertisment", async function () {
+    const { advertisment, admin, advertiser, creator } = await loadFixture(
       deployContract
     );
 
-    await proposal.createProposal(
+    await advertisment.createAdvertisment(
       creator.address,
       budget,
       campaignDetails,
@@ -72,27 +74,27 @@ describe("Proposal", function () {
     );
 
     // Connecting the contract to the creator signer before sending the transaction
-    const proposalConnectedToCreator = proposal.connect(creator);
-    await expect(proposalConnectedToCreator.rejectProposal(1))
-      .to.emit(proposalConnectedToCreator, "ProposalRejected")
+    const advertismentConnectedToCreator = advertisment.connect(creator);
+    await expect(advertismentConnectedToCreator.rejectAdvertisment(1))
+      .to.emit(advertismentConnectedToCreator, "AdvertismentRejected")
       .withArgs(1, creator.address);
   });
 
-  it("should fail if someone other than the creator tries to reject a proposal", async function () {
-    const { proposal, admin, advertiser, creator } = await loadFixture(
+  it("should fail if someone other than the creator tries to reject a advertisment", async function () {
+    const { advertisment, admin, advertiser, creator } = await loadFixture(
       deployContract
     );
 
-    await proposal.createProposal(
+    await advertisment.createAdvertisment(
       creator.address,
       budget,
       campaignDetails,
       tokenAddress,
       mileStoneThreshold
     );
-    await expect(proposal.connect(admin).rejectProposal(1)).to.be.revertedWith(
-      "Only the creator can reject this proposal"
-    );
+    await expect(
+      advertisment.connect(admin).rejectAdvertisment(1)
+    ).to.be.revertedWith("Only the creator can reject this advertisment");
   });
 
   // it("should begin ads", async function () {

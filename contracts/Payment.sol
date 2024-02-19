@@ -4,10 +4,10 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "../interfaces/IProposal.sol";
+import "../interfaces/IAdvertisment.sol";
 
 contract PaymentContract is Ownable, ReentrancyGuard {
-    IProposal private proposal;
+    IAdvertisment private advertisment;
     struct Payment {
         uint256 amount;
         address recipient;
@@ -16,7 +16,7 @@ contract PaymentContract is Ownable, ReentrancyGuard {
     }
 
     mapping(uint256 => Payment) public payments;
-    mapping(uint256 => mapping(address => uint256)) public proposalFunds;
+    mapping(uint256 => mapping(address => uint256)) public advertismentFunds;
 
     uint256 public nextPaymentId;
 
@@ -33,9 +33,9 @@ contract PaymentContract is Ownable, ReentrancyGuard {
     event FundsDeposited(address indexed token, uint256 amount);
     event CampaignEnded(uint256 indexed id);
 
-    constructor(address _proposalContractAddress) Ownable(msg.sender) {
+    constructor(address _advertismentContractAddress) Ownable(msg.sender) {
         nextPaymentId = 1;
-        proposal = IProposal(_proposalContractAddress);
+        advertisment = IAdvertisment(_advertismentContractAddress);
     }
 
     function createPayment(
@@ -54,6 +54,8 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         });
 
         emit PaymentCreated(nextPaymentId, _amount, _tokenAddress, _recipient);
+        executePayment(_paymentId);
+        resetAmountToBePaid(_advertismentId);
         nextPaymentId++;
     }
 
@@ -67,7 +69,7 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         );
         require(!payment.isPaid, "Payment already processed");
         // require(
-        //     proposal.isCampaignFunded(_proposalId),
+        //     advertisment.isCampaignFunded(_advertismentId),
         //     "Campaign is not funded"
         // );
 
@@ -83,29 +85,28 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         emit PaymentCompleted(_paymentId, payment.recipient);
     }
 
-    function refundUnusedFunds(uint256 proposalId) public {
-        IProposal.Proposal memory currentProposal = proposal.getProposal(
-            proposalId
-        );
+    function refundUnusedFunds(uint256 advertismentId) public {
+        IAdvertisment.Advertisment memory currentAdvertisment = advertisment
+            .getAdvertisment(advertismentId);
 
         require(
-            msg.sender == currentProposal.advertiser,
+            msg.sender == currentAdvertisment.advertiser,
             "Only the advertiser can request a refund"
         );
 
-        // Assuming a single token per proposal for simplicity
-        address tokenAddress = currentProposal.token;
-        uint256 remainingFunds = proposalFunds[proposalId][tokenAddress];
+        // Assuming a single token per Advertisment for simplicity
+        address tokenAddress = currentAdvertisment.token;
+        uint256 remainingFunds = proposalFunds[advertismentId][tokenAddress];
 
         require(remainingFunds > 0, "No funds left to refund");
 
         IERC20(tokenAddress).transfer(
-            currentProposal.advertiser,
+            currentAdvertisment.advertiser,
             remainingFunds
         );
 
         // Reset the funds to zero after refund
-        proposalFunds[proposalId][tokenAddress] = 0;
+        proposalFunds[advertismentId][tokenAddress] = 0;
 
         // Emit an event or add additional logic if needed
     }
@@ -118,5 +119,11 @@ contract PaymentContract is Ownable, ReentrancyGuard {
 
     function getBalance(address tokenAddress) public view returns (uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
+    }
+
+    function resetAmountToBePaid(uint256 _advertismentId) external onlyOwner {
+        IAdvertisment.Advertisment memory advertisment = advertisment
+            .getAdvertisment(_advertismentId);
+        advertisment.amountToBePaid = 0;
     }
 }

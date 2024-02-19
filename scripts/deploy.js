@@ -1,31 +1,68 @@
 require("ethers");
+const fs = require("fs");
+const path = require("path");
+
+const source = fs
+  .readFileSync(path.resolve(__dirname, "count-click.js"))
+  .toString();
+
+const router = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0";
 
 async function main() {
-  const Proposal = await ethers.deployContract("ProposalContract");
-  await Proposal.waitForDeployment();
-  const proposalAddress = Proposal.target;
-  const Payment = await ethers.deployContract("PaymentContract", [
-    proposalAddress,
-  ]);
-  await Payment.waitForDeployment();
-  const paymentAddress = Payment.target;
   const AccessControl = await ethers.deployContract("MACAccessControl");
   await AccessControl.waitForDeployment();
   const accessControlAddress = AccessControl.target;
+  console.log("AccessControl deployed to:", accessControlAddress);
+
+  const Token = await ethers.deployContract("Token");
+  await Token.waitForDeployment();
+  const tokenAddress = Token.target;
+  console.log("Token deployed to:", tokenAddress);
+
+  const Advertisment = await ethers.deployContract("AdvertismentContract");
+  await Advertisment.waitForDeployment();
+  const advertismentAddress = Advertisment.target;
+  console.log("Advertisment deployed to:", advertismentAddress);
+
+  const Payment = await ethers.deployContract("PaymentContract", [
+    advertismentAddress,
+  ]);
+  await Payment.waitForDeployment();
+  const paymentAddress = Payment.target;
+  console.log("Payment deployed to:", paymentAddress);
+
+  const ClickCountOracle = await ethers.deployContract("ClickCountOracle", [
+    router,
+    advertismentAddress,
+    source,
+  ]);
+  await ClickCountOracle.waitForDeployment();
+  const clickCountAddress = ClickCountOracle.target;
+  console.log("ClickCountOracle deployed to:", clickCountAddress);
+
+  const ActiveAdsKeeper = await ethers.deployContract("ActiveAdsKeeper", [
+    clickCountAddress,
+  ]);
+  await ActiveAdsKeeper.waitForDeployment();
+  console.log("ActiveAdsKeeper deployed to:", ActiveAdsKeeper.target);
+
+  const MilestoneKeeper = await ethers.deployContract(
+    "MilestonePaymentKeeper",
+    [paymentAddress, advertismentAddress]
+  );
+  await MilestoneKeeper.waitForDeployment();
+  const milestoneAddress = MilestoneKeeper.target;
+  console.log("MilestoneKeeper deployed to:", milestoneAddress);
+
   const MACPlatformManager = await ethers.deployContract("MACPlatformManager", [
-    proposalAddress,
+    advertismentAddress,
     paymentAddress,
     accessControlAddress,
   ]);
   await MACPlatformManager.waitForDeployment();
-  console.log("Proposal deployed to:", proposalAddress);
-  console.log("Payment deployed to:", paymentAddress);
-  console.log("AccessControl deployed to:", accessControlAddress);
   console.log("MACPlatformManager deployed to:", MACPlatformManager.target);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
