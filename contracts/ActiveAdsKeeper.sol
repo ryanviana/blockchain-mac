@@ -27,7 +27,7 @@ interface ILogAutomation {
 contract ActiveAdsKeeper is ILogAutomation {
     //mocked values for fuji and chainlink functions
     bytes32 private constant DON_ID =
-        "0x66756e2d6176616c616e6368652d66756a692d31000000000000000000000000";
+        0x66756e2d6176616c616e6368652d66756a692d31000000000000000000000000;
     bytes private constant ENCRYPTED_SECRETS_URLS = "0x";
     uint8 private constant DON_HOSTED_SECRETS_SLOT_ID = 0;
     uint64 private constant DON_HOSTED_SECRETS_VERSION = 0;

@@ -24,7 +24,6 @@ contract MacMain {
     function createAdvertisment(
         address creator,
         uint256 budget,
-        string memory campaignDetails,
         address token,
         uint256 milestoneThreshold,
         uint256 CPM
@@ -40,7 +39,6 @@ contract MacMain {
         advertismentContract.createAdvertisment(
             creator,
             budget,
-            campaignDetails,
             token,
             milestoneThreshold,
             CPM

@@ -8,7 +8,6 @@ contract AdvertismentContract is Ownable {
         uint256 id;
         address advertiser;
         address creator;
-        string campaignDetails;
         uint256 budget;
         bool isAccepted;
         address token;
@@ -27,8 +26,7 @@ contract AdvertismentContract is Ownable {
         uint256 indexed id,
         address indexed advertiser,
         address indexed creator,
-        uint256 budget,
-        string campaignDetails
+        uint256 budget
     );
     event AdvertismentEnded(uint256 indexed id);
     event AdvertismentAccepted(uint256 indexed id, address indexed creator);
@@ -42,7 +40,6 @@ contract AdvertismentContract is Ownable {
     function createAdvertisment(
         address _creator,
         uint256 _budget,
-        string memory _campaignDetails,
         address _token,
         uint256 _milestoneThreshold,
         uint256 _CPM
@@ -53,7 +50,6 @@ contract AdvertismentContract is Ownable {
             id: newAdvertismentId,
             advertiser: msg.sender,
             creator: _creator,
-            campaignDetails: _campaignDetails,
             budget: _budget,
             isAccepted: false,
             token: _token,
@@ -65,14 +61,13 @@ contract AdvertismentContract is Ownable {
             clicks: 0
         });
 
-        Advertisments[newAdvertismentId] = newAdvertisment;
+        advertisments[newAdvertismentId] = newAdvertisment;
 
         emit AdvertismentCreated(
             newAdvertismentId,
             msg.sender,
             _creator,
-            _budget,
-            _campaignDetails
+            _budget
         );
 
         nextAdvertismentId++; // Increment the ID for the next Advertisment
@@ -123,10 +118,10 @@ contract AdvertismentContract is Ownable {
     }
 
     function setClicks(uint256 _advertismentId, uint256 _clicks) public {
-        require(
-            msg.sender == address(clickCountFunction),
-            "Only the click count function can set the clicks"
-        );
+        // require(
+        //     msg.sender == address(clickCountFunction),
+        //     "Only the click count function can set the clicks"
+        // );
         advertisments[_advertismentId].clicks = _clicks;
     }
 
@@ -134,10 +129,10 @@ contract AdvertismentContract is Ownable {
         uint256 _advertismentId,
         uint256 _amountToBePaid
     ) public {
-        require(
-            msg.sender == address(clickCountFunction),
-            "Only the click count function can set the amount to be paid"
-        );
+        // require(
+        //     msg.sender == address(clickCountFunction),
+        //     "Only the click count function can set the amount to be paid"
+        // );
         advertisments[_advertismentId].amountToBePaid = _amountToBePaid;
     }
 }

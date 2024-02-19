@@ -54,9 +54,34 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         });
 
         emit PaymentCreated(nextPaymentId, _amount, _tokenAddress, _recipient);
-        executePayment(_paymentId);
-        resetAmountToBePaid(_advertismentId);
+        pay(nextPaymentId);
+        //TODO
+        // resetAmountToBePaid(_advertismentId);
         nextPaymentId++;
+    }
+
+    function pay(uint256 _paymentId) public {
+        Payment storage payment = payments[_paymentId];
+        require(
+            payment.amount > 0,
+            "Invalid payment ID or payment already completed"
+        );
+        require(!payment.isPaid, "Payment already processed");
+        // require(
+        //     advertisment.isCampaignFunded(_advertismentId),
+        //     "Campaign is not funded"
+        // );
+
+        IERC20 paymentToken = IERC20(payment.tokenAddress);
+        require(
+            paymentToken.balanceOf(address(this)) >= payment.amount,
+            "Insufficient token balance"
+        );
+
+        payment.isPaid = true;
+        paymentToken.transfer(payment.recipient, payment.amount);
+
+        emit PaymentCompleted(_paymentId, payment.recipient);
     }
 
     // Function to execute a payment
@@ -96,7 +121,9 @@ contract PaymentContract is Ownable, ReentrancyGuard {
 
         // Assuming a single token per Advertisment for simplicity
         address tokenAddress = currentAdvertisment.token;
-        uint256 remainingFunds = proposalFunds[advertismentId][tokenAddress];
+        uint256 remainingFunds = advertismentFunds[advertismentId][
+            tokenAddress
+        ];
 
         require(remainingFunds > 0, "No funds left to refund");
 
@@ -106,7 +133,7 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         );
 
         // Reset the funds to zero after refund
-        proposalFunds[advertismentId][tokenAddress] = 0;
+        advertismentFunds[advertismentId][tokenAddress] = 0;
 
         // Emit an event or add additional logic if needed
     }
@@ -121,7 +148,7 @@ contract PaymentContract is Ownable, ReentrancyGuard {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
 
-    function resetAmountToBePaid(uint256 _advertismentId) external onlyOwner {
+    function resetAmountToBePaid(uint256 _advertismentId) public onlyOwner {
         IAdvertisment.Advertisment memory advertisment = advertisment
             .getAdvertisment(_advertismentId);
         advertisment.amountToBePaid = 0;

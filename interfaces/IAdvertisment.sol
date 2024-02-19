@@ -6,7 +6,6 @@ interface IAdvertisment {
         uint256 id;
         address advertiser;
         address creator;
-        string campaignDetails;
         uint256 budget;
         bool isAccepted;
         address token;
@@ -22,8 +21,7 @@ interface IAdvertisment {
         uint256 indexed id,
         address indexed advertiser,
         address indexed creator,
-        uint256 budget,
-        string campaignDetails
+        uint256 budget
     );
     event CampaignEnded(uint256 indexed id);
     event AdvertismentAccepted(uint256 indexed id, address indexed creator);
@@ -32,7 +30,6 @@ interface IAdvertisment {
     function createAdvertisment(
         address _creator,
         uint256 _budget,
-        string memory _campaignDetails,
         address _token,
         uint256 _milestoneThreshold,
         uint256 _CPM
